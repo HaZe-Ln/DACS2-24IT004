@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: php-guitar
+    container_name: php-guitar-web
     ports:
       - "8080:80"
     volumes:
@@ -14,7 +14,7 @@ services:
       DB_DATABASE: ${DB_DATABASE}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-      DB_HOST: db # Kết nối MySQL container
+      DB_HOST: dacs2-24it004-db-1 # Kết nối MySQL container
       DB_PORT: 3306
     restart: no
     depends_on:
@@ -36,7 +36,7 @@ services:
     networks:
       - app-network
   phpmyadmin:
-    container_name: phpmyadmin-guitar
+    container_name: phpmyadmin-guitar-web
     image: phpmyadmin
     restart: no
     ports:
