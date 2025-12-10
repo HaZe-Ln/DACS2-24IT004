@@ -1,0 +1,56 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: php-guitar
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html # Mount project trực tiếp → hot reload
+    environment:
+      TZ: "Asia/Ho_Chi_Minh"
+      JWT_SECRET: ${JWT_SECRET}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db # Kết nối MySQL container
+      DB_PORT: 3306
+    restart: no
+    depends_on:
+      - db
+    networks:
+      - app-network
+  db:
+    image: mysql
+    restart: no
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - 4390:3306
+    networks:
+      - app-network
+  phpmyadmin:
+    container_name: phpmyadmin-guitar
+    image: phpmyadmin
+    restart: no
+    ports:
+      - 4410:80
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 300M
+    depends_on:
+      - db
+    networks:
+      - app-network
+volumes:
+  mysql_data:
+networks:
+  app-network:
+    driver: bridge
