@@ -31,5 +31,3 @@ docker compose up -d --build
   - components: nơi chứa các component
   - layouts: chứa các file liên quan layout, ví dụ head, footer, header, ...
   - pages: nơi chứa các trang hiển thị
-
-### Cập nhật gần nhất: 6:28-20/11/2025
