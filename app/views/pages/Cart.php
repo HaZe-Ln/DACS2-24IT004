@@ -104,5 +104,6 @@ $message     = $data['message'];
     // Tự động tắt thông báo sau 3 giây
     setTimeout(() => closeToast(), 3000);
   </script>
+  <?php Import::component('SocialWidget'); ?>
 </body>
 </html>

@@ -5,16 +5,14 @@ Import::controllers(["ProductController"]);
 Import::repositories(["PostRepository"]); 
 // 1. LẤY DỮ LIỆU TỪ DATABASE
 // A. Lấy 4 sản phẩm Ưu đãi
-$discountedProducts = ProductRepository::paginate(1, 4, [
+$discountedProducts = ProductRepository::paginate(1, 8, [
     'has_discount' => true, 
     'sort' => 'price_asc'
 ]);
 $latestPosts = PostRepository::getLatest(3);
 
 // B. Lấy 8 sản phẩm Nổi bật
-$featuredProducts = ProductRepository::paginate(1, 8, [
-    'sort' => 'popular' 
-]);
+$featuredProducts = ProductRepository::getBestSellingProducts(8);
 
 // Hero banner
 $hero = [
@@ -96,8 +94,8 @@ Import::layout('Head', [
                                 "price_current"    => $product->price_current,
                                 "discount_percent" => $product->discount_percent,
                                 "imageUrl"         => $imgUrl
-                            ]); 
-                        ?>
+                                  ]); 
+                                ?>
                     </li>
                 <?php endforeach ?>
              </ul>
@@ -196,5 +194,6 @@ Import::layout('Head', [
   <script>
     function showLoader() { document.getElementById('global-loader')?.classList.remove('hidden'); document.getElementById('global-loader')?.classList.add('flex'); }
   </script>
+  <?php Import::component('SocialWidget'); ?>
 </body>
 </html>

@@ -2,14 +2,12 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/app/helpers/Import.php';
 Import::controllers(["OrderController"]);
 
-// 1. Gọi Controller lấy dữ liệu
 $controller = new OrderController();
 $data = $controller->confirmation();
 
 $order = $data['order'];
 $items = $data['items'];
 
-// Tính tổng tiền
 $totalOrder = 0;
 foreach($items as $it) $totalOrder += $it->product_total_price;
 $shipping = 30000;
@@ -42,10 +40,18 @@ $finalTotal = $totalOrder + $shipping;
                 <span class="font-semibold text-gray-800">#<?= $order->id ?></span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-gray-500">Trạng thái:</span>
-                <span class="font-semibold text-green-600 bg-green-100 px-3 py-1 rounded-full text-sm">
-                    <?= $order->status_order ?>
-                </span>
+                <span class="text-gray-500">Trạng thái đơn hàng:</span>
+                <?php Import::component('OrderStatusBadge', [
+                    'status' => $order->status_order,
+                    'size' => 'md'
+                ]); ?>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-500">Trạng thái thanh toán:</span>
+                <?php Import::component('OrderPaymentBadge', [
+                    'status' => $order->status_payment,
+                    'size' => 'md'
+                ]); ?>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-gray-500">Ngày đặt hàng:</span>
@@ -98,5 +104,6 @@ $finalTotal = $totalOrder + $shipping;
   </main>
 
   <?php Import::layout("Footer") ?>
+  <?php Import::component('SocialWidget'); ?>
 </body>
 </html>

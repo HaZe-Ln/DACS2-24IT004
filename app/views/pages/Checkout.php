@@ -13,6 +13,7 @@ $cartItems   = $data['cartItems'];
 $subtotal    = $data['subtotal'];
 $shippingFee = $data['shippingFee'];
 $total       = $data['total'];
+$isDirect    = $data['isDirect'] ?? false;
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -64,6 +65,11 @@ $total       = $data['total'];
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
+            <?php if ($isDirect): ?>
+              <input type="hidden" name="is_direct" value="1">
+              <input type="hidden" name="direct_product_id" value="<?= $cartItems[0]->product->id ?>">
+              <input type="hidden" name="direct_quantity" value="<?= $cartItems[0]->quantity ?>">
+            <?php endif; ?>
           </section>
 
           <section>
@@ -85,20 +91,36 @@ $total       = $data['total'];
           <section>
             <h2 class="text-[22px] font-bold text-text-light pb-5">Phương thức thanh toán</h2>
             <div class="flex flex-col gap-4">
-              <label class="flex items-center p-4 border border-primary bg-primary/5 rounded-lg cursor-pointer">
-                <input checked class="w-4 h-4 text-primary focus:ring-primary" name="payment_method" value="cod" type="radio" />
+              
+              <label class="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-primary transition-all has-[:checked]:border-primary has-[:checked]:bg-blue-50">
+                <input checked class="w-4 h-4 text-primary focus:ring-primary" name="payment_method" value="cod" type="radio" onchange="toggleQR('cod')" />
                 <div class="ml-4 flex-1">
                   <span class="text-text-light font-medium">Thanh toán khi nhận hàng (COD)</span>
                 </div>
                 <span class="material-symbols-outlined text-gray-400">payments</span>
               </label>
-              <label class="flex items-center p-4 border border-gray-200 bg-gray-50 rounded-lg opacity-60 cursor-not-allowed">
-                <input disabled class="w-4 h-4" name="payment_method" type="radio" />
-                <div class="ml-4 flex-1">
-                  <span class="text-text-light font-medium">Chuyển khoản ngân hàng (Đang bảo trì)</span>
+
+              <label class="flex flex-col p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-primary transition-all has-[:checked]:border-primary has-[:checked]:bg-blue-50">
+                <div class="flex items-center w-full">
+                    <input class="w-4 h-4 text-primary focus:ring-primary" name="payment_method" value="bank_transfer" type="radio" onchange="toggleQR('bank')" />
+                    <div class="ml-4 flex-1">
+                      <span class="text-text-light font-medium">Chuyển khoản Ngân hàng (QR)</span>
+                    </div>
+                    <span class="material-symbols-outlined text-gray-400">qr_code_scanner</span>
                 </div>
-                <span class="material-symbols-outlined text-gray-400">account_balance</span>
+
+                <div id="qr-container" class="hidden mt-4 pt-4 border-t border-gray-200 w-full">
+                    <div class="bg-white p-3 rounded-lg border border-gray-300 shadow-sm text-center">
+                        <p class="text-sm text-blue-600 font-bold mb-2">Quét mã để thanh toán</p>
+                        <img id="qr-image" src="" alt="QR Code" class="w-48 h-48 mx-auto object-contain">
+                        <p class="text-xs text-gray-500 mt-2 italic">
+                            Nội dung: <span class="font-bold text-gray-800">THANH TOAN MUA HANG</span><br>
+                            (Vui lòng chờ giây lát để QR cập nhật giá tiền)
+                        </p>
+                    </div>
+                </div>
               </label>
+
             </div>
           </section>
         </div>
@@ -161,5 +183,58 @@ $total       = $data['total'];
   </main>
 
   <?php Import::layout("Footer") ?>
+  <script>
+    // Cấu hình Tài khoản ngân hàng của bạn
+    const MY_BANK = {
+        ID: 'MB',           // Mã ngân hàng (MB, VCB, TPB, TCB...)
+        ACC: '0383028421',  // Số tài khoản
+        NAME: 'LE CAO SON TIEN'   // Tên chủ tài khoản
+    };
+
+    // Biến lưu tổng tiền hiện tại
+    let currentTotal = <?= $total ?>; 
+
+    function toggleQR(method) {
+        const qrContainer = document.getElementById('qr-container');
+        if (method === 'bank') {
+            qrContainer.classList.remove('hidden');
+            updateQRImage(); // Tạo QR ngay khi bấm
+        } else {
+            qrContainer.classList.add('hidden');
+        }
+    }
+
+    function updateQRImage() {
+        // Nội dung chuyển khoản: Vì chưa có mã đơn hàng nên để nội dung chung
+        // Hoặc bạn có thể thêm SĐT người mua vào: "TT MUA HANG 098xxx"
+        const content = "THANH TOAN MUA HANG"; 
+        
+        // Link API VietQR
+        const qrUrl = `https://img.vietqr.io/image/${MY_BANK.ID}-${MY_BANK.ACC}-compact.png?amount=${currentTotal}&addInfo=${encodeURIComponent(content)}&accountName=${encodeURIComponent(MY_BANK.NAME)}`;
+        
+        document.getElementById('qr-image').src = qrUrl;
+    }
+
+    function updateTotal(shippingFee) {
+        let subtotal = <?= $subtotal ?>; 
+        
+        // Cập nhật biến toàn cục currentTotal
+        currentTotal = subtotal + shippingFee;
+
+        // Cập nhật giao diện tiền
+        let fmtShipping = new Intl.NumberFormat('vi-VN').format(shippingFee);
+        let fmtTotal = new Intl.NumberFormat('vi-VN').format(currentTotal);
+
+        document.getElementById('display-shipping').innerText = fmtShipping + '₫';
+        document.getElementById('display-total').innerText = fmtTotal + '₫';
+
+        // Nếu đang chọn Bank Transfer thì cập nhật lại ảnh QR theo giá mới
+        const isBank = document.querySelector('input[name="payment_method"][value="bank_transfer"]').checked;
+        if (isBank) {
+            updateQRImage();
+        }
+    }
+  </script>
+  <?php Import::component('SocialWidget'); ?>
 </body>
 </html>

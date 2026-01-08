@@ -7,24 +7,24 @@ $footerLinks = [
     ["label" => "Về chúng tôi", "href" => "#"],
   ],
   "Liên hệ" => [
-    ["label" => "123 Nguyễn Văn Huyên, Cầu Giấy, Hà Nội", "icon" => "location_on"],
-    ["label" => "(028) 3812 3456", "icon" => "call"],
-    ["label" => "support@htamusic.vn", "icon" => "email"],
+    ["label" => "123 Trà Phước, Hòa Vang, Đà Nẵng", "icon" => "location_on"],
+    ["label" => "(012) 345 6789", "icon" => "call"],
+    ["label" => "support@amusic.vn", "icon" => "email"],
   ],
 ];
 
 $socialLinks = [
-  ["label" => "Facebook", "href" => "#"],
-  ["label" => "Instagram", "href" => "#"],
-  ["label" => "YouTube", "href" => "#"],
+  ["label" => "Facebook", "href" => "https://www.facebook.com/ha.ln.275085/"],
+  ["label" => "Instagram", "href" => "https://www.instagram.com/anhhoang24050303/"],
+  ["label" => "YouTube", "href" => "https://www.youtube.com/@hoanganhle7752"],
 ];
 ?>
 
-<footer class="bg-primary text-gray-200 mt-12">
+<footer class="bg-[#121212] text-gray-200 mt-12">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 py-10 space-y-8">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
       <div>
-        <h3 class="text-lg font-bold text-white mb-4">HTAMusic</h3>
+        <h3 class="text-lg font-bold text-white mb-4">AMusic</h3>
         <p class="text-sm leading-relaxed">
           Chuyên cung cấp nhạc cụ chính hãng cùng dịch vụ hậu mãi tận tâm cho người chơi mới và chuyên nghiệp.
         </p>
@@ -65,7 +65,7 @@ $socialLinks = [
     </div>
 
     <div class="border-t border-white/20 pt-6 text-center text-sm">
-      © 2024 HTAMusic. All Rights Reserved.
+      © 2024 AMusic. All Rights Reserved.
     </div>
   </div>
 </footer>

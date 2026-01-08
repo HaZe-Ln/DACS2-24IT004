@@ -198,4 +198,46 @@ class UserRepository
             return false;
         }
     }
+
+    // Lưu token reset password
+    public static function saveResetToken($email, $token) {
+        // Token hết hạn sau 1 giờ
+        $expiry = date('Y-m-d H:i:s', time() + 3600);
+    
+        $pdo = PDODatabase::getInstance()->getConnection();
+        $sql = "UPDATE users SET reset_token = :token, reset_token_expiry = :expiry WHERE email = :email";
+        $stmt = $pdo->prepare($sql);
+        return $stmt->execute([
+            ':token' => $token,
+            ':expiry' => $expiry,
+            ':email' => $email
+        ]);
+    }
+
+    // Kiểm tra token có hợp lệ không
+    public static function findByResetToken($email, $token) {
+        $row = Query::from("users")
+            ->where([
+                "email = :email", 
+                "reset_token = :token", 
+                "reset_token_expiry > NOW()"
+            ])
+            ->bindValue([
+                ":email" => $email,
+                ":token" => $token
+            ])
+            ->get();
+        
+        if (!$row) return null;
+        $user = new User();
+        $user->fill($row);
+        return $user;
+    }
+
+    // Xóa token sau khi đổi mật khẩu thành công
+    public static function clearResetToken($id) {
+        $pdo = PDODatabase::getInstance()->getConnection();
+        $stmt = $pdo->prepare("UPDATE users SET reset_token = NULL, reset_token_expiry = NULL WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+    }
 }

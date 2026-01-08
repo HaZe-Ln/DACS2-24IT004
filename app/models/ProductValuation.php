@@ -1,11 +1,11 @@
 <?php 
-require_once "Model.php";
-require_once "Order.php";
-require_once "Product.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . '/app/models/Model.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/app/models/Order.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/app/models/Product.php';
 
 class ProductValuation extends Model
 {
- public $id,$star_rate,$content;
+ public $id,$star_rate,$content,$order_id, $product_id;
 
  public Order $order;
 

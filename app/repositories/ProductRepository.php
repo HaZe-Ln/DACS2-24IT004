@@ -67,84 +67,131 @@ class ProductRepository
     return $products;
     }
   public static function paginate($page = 1, $limit = 12, $filters = [])
-  {
-    $products = [];
-    $prodIds = [];
+    {
+        $pdo = PDODatabase::getInstance()->getConnection();
+        $offset = ($page - 1) * $limit;
 
-    // 1. KHỞI TẠO QUERY
-    $query = Query::from("products p")
-      ->select(["p.*", Branch::FieldJoin, ProductCategory::FieldJoin])
-      ->joins([
-        "branchs b on b.id = p.branch_id",
-        "productcategorys pc on pc.id = p.product_category_id",
-      ]);
+        // 1. Xây dựng câu SQL cơ bản
+        $sql = "SELECT p.*, 
+                       b.id as branch_id, b.name as branch_name, 
+                       pc.id as pc_id, pc.name as pc_name
+                FROM products p
+                LEFT JOIN branchs b ON b.id = p.branch_id
+                LEFT JOIN productcategorys pc ON pc.id = p.product_category_id
+                WHERE 1=1";
 
-    // 2. ÁP DỤNG BỘ LỌC (Tách ra hàm private hoặc viết thẳng vào đây)
-    self::applyFilters($query, $filters);
+        $params = [];
 
-    // 3. XỬ LÝ PHÂN TRANG
-    $offset = ($page - 1) * $limit;
-    $query->limit($limit)->offset($offset);
-    
-    // Xử lý Sắp xếp (Sort)
-    if (isset($filters['sort'])) {
-        switch ($filters['sort']) {
-            case 'price_asc': $query->toQuery("ORDER BY p.price_current ASC"); break; // Lưu ý: Query builder của bạn cần hỗ trợ orderBy, nếu chưa thì dùng tạm string chèn
-            case 'price_desc': $query->toQuery("ORDER BY p.price_current DESC"); break;
-            default: $query->toQuery("ORDER BY p.created_at DESC"); break;
-        }
-    }
-
-    // 4. CHẠY QUERY LẤY DATA CƠ BẢN
-    $prodRows = $query->getAll();
-
-    // 5. MAP DỮ LIỆU VÀO MODEL (Logic giống hệt hàm find cũ)
-    foreach ($prodRows as $row) {
-      $pro = new Product();
-      $pro->fill($row);
-
-      $branch = new Branch();
-      $branch->fillJoin($row);
-
-      $proCate = new ProductCategory();
-      $proCate->fillJoin($row);
-
-      $pro->branch = $branch;
-      $pro->productCategory = $proCate;
-      
-      array_push($products, $pro);
-      array_push($prodIds, $pro->id);
-    }
-
-    // 6. LẤY ẢNH (Logic cũ - Rất quan trọng để hiển thị ảnh)
-    if (!empty($prodIds)) {
-        // Tạo chuỗi ID an toàn hơn: implode
-        $idsString = implode(", ", $prodIds);
+        // 2. ÁP DỤNG BỘ LỌC (Chuyển từ Query Builder sang SQL thuần)
         
-        $prodImgRows = Query::from("productimages pi")
-            ->where(["pi.product_id IN ($idsString)"]) // Query builder của bạn hỗ trợ string where
-            ->getAll();
-
-        $productImages = [];
-        foreach ($prodImgRows as $row) {
-            $proI = new ProductImage();
-            $proI->fill($row);
-            $productImages[] = $proI;
+        // Lọc Branch
+        if (!empty($filters['branch'])) {
+            $sql .= " AND b.id = :branchId";
+            $params[':branchId'] = $filters['branch'];
         }
 
-        // Gán ảnh vào product
-        foreach ($products as $pro) {
-            $imgs = [];
-            foreach ($productImages as $pI) {
-                if ($pI->product_id == $pro->id) {
-                    $imgs[] = $pI;
-                }
+        // Lọc Category
+        if (!empty($filters['product_category'])) {
+            $sql .= " AND pc.id = :catId";
+            $params[':catId'] = $filters['product_category'];
+        }
+
+        // Lọc Giá
+        if (!empty($filters['price_min'])) {
+            $sql .= " AND p.price_current >= :minPrice";
+            $params[':minPrice'] = $filters['price_min'];
+        }
+        if (!empty($filters['price_max'])) {
+            $sql .= " AND p.price_current <= :maxPrice";
+            $params[':maxPrice'] = $filters['price_max'];
+        }
+
+        // Lọc có giảm giá
+        if (!empty($filters['has_discount'])) {
+            $sql .= " AND p.discount_percent > 0";
+        }
+
+        // 3. XỬ LÝ SẮP XẾP (Quan trọng: Đặt trước LIMIT)
+        $sort = $filters['sort'] ?? 'popular';
+        switch ($sort) {
+            case 'price_asc': 
+                $sql .= " ORDER BY p.price_current ASC"; 
+                break;
+            case 'price_desc': 
+                $sql .= " ORDER BY p.price_current DESC"; 
+                break;
+            case 'popular':
+            default: 
+                $sql .= " ORDER BY p.created_at DESC"; 
+                break;
+        }
+
+        // 4. PHÂN TRANG
+        $sql .= " LIMIT :limit OFFSET :offset";
+
+        // 5. THỰC THI QUERY
+        $stmt = $pdo->prepare($sql);
+        
+        // Bind params cho bộ lọc
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val);
+        }
+        // Bind params cho phân trang (bắt buộc dùng PARAM_INT)
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+        
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 6. MAP DỮ LIỆU & LẤY ẢNH (Logic cũ)
+        $products = [];
+        $prodIds = [];
+
+        foreach ($rows as $row) {
+            $pro = new Product();
+            $pro->fill($row);
+
+            $branch = new Branch();
+            $branch->id = $row['branch_id'] ?? null;
+            $branch->name = $row['branch_name'] ?? null;
+            $pro->branch = $branch;
+
+            $proCate = new ProductCategory();
+            $proCate->id = $row['pc_id'] ?? null;
+            $proCate->name = $row['pc_name'] ?? null;
+            $pro->productCategory = $proCate;
+
+            $products[] = $pro;
+            $prodIds[] = $pro->id;
+        }
+
+        // Lấy ảnh (Eager Loading)
+        if (!empty($prodIds)) {
+            $idsString = implode(", ", $prodIds);
+            // Dùng Query builder cho đoạn này vẫn ổn vì nó đơn giản
+            $imgRows = Query::from("productimages pi")
+                ->where(["pi.product_id IN ($idsString)"])
+                ->getAll();
+
+            $productImages = [];
+            foreach ($imgRows as $r) {
+                $img = new ProductImage();
+                $img->fill($r);
+                $productImages[] = $img;
             }
-            $pro->productImages = $imgs;
-        }
-    }
 
-    return $products;
+            foreach ($products as $pro) {
+                $imgs = [];
+                foreach ($productImages as $pI) {
+                    if ($pI->product_id == $pro->id) {
+                        $imgs[] = $pI;
+                    }
+                }
+                $pro->productImages = $imgs;
+            }
+        }
+
+        return $products;
     }
 
   /**
@@ -237,54 +284,57 @@ class ProductRepository
         return $branches;
     } 
   public static function getById($id)
-  {
-    // 1. Lấy thông tin cơ bản (Product + Branch + Category)
-    // Lưu ý: Thêm điều kiện WHERE p.id = :id
-    $rows = Query::from("products p")
-      ->select(["p.*", Branch::FieldJoin, ProductCategory::FieldJoin])
-      ->joins([
-        "branchs b on b.id = p.branch_id",
-        "productcategorys pc on pc.id = p.product_category_id",
-      ])
-      ->where(["p.id = :id"])
-      ->bindValue([":id" => $id])
-      ->getAll();
+    {
+        // 1. Dùng JOIN mặc định của thư viện Query (Inner Join)
+        // Không ghi "LEFT JOIN" hay "INNER JOIN" vào chuỗi, chỉ ghi tên bảng và điều kiện
+        $rows = Query::from("products p")
+            ->select([
+                "p.*", 
+                Branch::FieldJoin, 
+                ProductCategory::FieldJoin
+            ])
+            ->joins([
+                "branchs b on b.id = p.branch_id",
+                "productcategorys pc on pc.id = p.product_category_id",
+            ])
+            ->where(["p.id = :id"])
+            ->bindValue([":id" => $id])
+            ->getAll();
 
-    if (empty($rows)) {
-      return null; // Không tìm thấy sản phẩm
+        if (empty($rows)) {
+            return null;
+        }
+
+        $row = $rows[0];
+        $product = new Product();
+        $product->fill($row);
+
+        // Map dữ liệu sang Object con
+        $branch = new Branch();
+        $branch->fillJoin($row);
+        $product->branch = $branch;
+
+        $cat = new ProductCategory();
+        $cat->fillJoin($row);
+        $product->productCategory = $cat;
+
+        // 2. Lấy ảnh
+        $imgRows = Query::from("productimages")
+            ->where(["product_id = :pid"])
+            ->bindValue([":pid" => $id])
+            ->getAll();
+
+        $imgs = [];
+        foreach ($imgRows as $imgRow) {
+            $img = new ProductImage();
+            $img->fill($imgRow);
+            $imgs[] = $img;
+        }
+        $product->productImages = $imgs;
+
+        return $product;
     }
-
-    // Map dữ liệu vào Model
-    $row = $rows[0]; // Lấy dòng đầu tiên
-    $product = new Product();
-    $product->fill($row);
-
-    $branch = new Branch();
-    $branch->fillJoin($row);
-
-    $cat = new ProductCategory();
-    $cat->fillJoin($row); // Hoặc fill() tuỳ vào cách bạn viết Model ProductCategory
-
-    $product->branch = $branch;
-    $product->productCategory = $cat;
-
-    // 2. Lấy danh sách ảnh của sản phẩm này
-    $imgRows = Query::from("productimages")
-      ->where(["product_id = :pid"])
-      ->bindValue([":pid" => $id])
-      ->getAll();
-
-    $imgs = [];
-    foreach ($imgRows as $imgRow) {
-      $img = new ProductImage();
-      $img->fill($imgRow);
-      $imgs[] = $img;
-    }
-    $product->productImages = $imgs;
-
-    return $product;
-    }
-  // ... (Các hàm find, paginate, count, getById... giữ nguyên)
+  
 
     /**
      * [MỚI] Thêm sản phẩm
@@ -293,17 +343,20 @@ class ProductRepository
     {
         $product = new Product();
         $product->name = $data['name'];
-        // Tự tạo slug nếu chưa có
-        $product->slug = self::slugify($data['name']); 
+        $product->slug = self::slugify($data['name']);
         $product->description = $data['description'];
-        $product->price_current = $data['price_current'];
+        
         $product->price_original = $data['price_original'];
         $product->discount_percent = $data['discount_percent'];
+        $product->price_current = self::calculateCurrentPrice($data['price_original'], $data['discount_percent']);
+        
         $product->quantity = $data['quantity'];
+        
+        // [QUAN TRỌNG] Gán ID vào thuộc tính để Query->save() nhận diện được cột
         $product->branch_id = $data['branch_id'];
         $product->product_category_id = $data['product_category_id'];
         
-        // Lưu Product -> Trả về ID mới
+        // Save trả về ID mới
         $newId = Query::from("products")->save($product);
 
         // Lưu ảnh
@@ -324,27 +377,29 @@ class ProductRepository
     public static function update($id, $data)
     {
         $product = new Product();
-        $product->id = $id; // Gán ID để Query biết là update
+        $product->id = $id;
         $product->name = $data['name'];
         $product->slug = self::slugify($data['name']);
         $product->description = $data['description'];
-        $product->price_current = $data['price_current'];
+        
         $product->price_original = $data['price_original'];
         $product->discount_percent = $data['discount_percent'];
+        $product->price_current = self::calculateCurrentPrice($data['price_original'], $data['discount_percent']);
+
         $product->quantity = $data['quantity'];
+        
+        // Gán ID để cập nhật
         $product->branch_id = $data['branch_id'];
         $product->product_category_id = $data['product_category_id'];
 
         Query::from("products")->save($product);
 
-        // Xử lý ảnh: Cách đơn giản là xóa ảnh cũ, thêm ảnh mới (hoặc xử lý logic merge ở Controller)
+        // Xử lý ảnh (Xóa cũ thêm mới cho đơn giản)
         if (isset($data['images']) && is_array($data['images'])) {
-            // Xóa ảnh cũ
             $pdo = PDODatabase::getInstance()->getConnection();
             $stmt = $pdo->prepare("DELETE FROM productimages WHERE product_id = :pid");
             $stmt->execute([':pid' => $id]);
 
-            // Thêm ảnh mới
             foreach ($data['images'] as $url) {
                 $img = new ProductImage();
                 $img->product_id = $id;
@@ -352,6 +407,14 @@ class ProductRepository
                 Query::from("productimages")->save($img);
             }
         }
+    }
+    private static function calculateCurrentPrice($original, $percent)
+    {
+        $original = (float)$original;
+        $percent = (int)$percent;
+        if ($percent < 0) $percent = 0;
+        if ($percent > 100) $percent = 100;
+        return $original * (1 - ($percent / 100));
     }
 
     // Hàm hỗ trợ tạo slug
@@ -364,6 +427,83 @@ class ProductRepository
         $text = preg_replace('~[^-a-z0-9]+~', '', $text);
         return $text ?: 'n-a';
     }
-  
+    
+    // Hàm lấy sản phẩm nổi bật 
+    public static function getBestSellingProducts($limit = 8)
+    {
+        $pdo = PDODatabase::getInstance()->getConnection();
+
+        // [LOGIC MỚI]: 
+        // 1. Dùng INNER JOIN giữa OrderItems và Orders để loại bỏ ngay lập tức các đơn rác
+        // 2. Dùng WHERE o.status_order = 'completed' để chỉ lấy đơn thành công
+        $sql = "SELECT p.*, 
+                       b.id as branch_id, b.name as branch_name, 
+                       pc.id as pc_id, pc.name as pc_name,
+                       SUM(oi.quantity) as total_sold
+                FROM products p
+                JOIN orderitems oi ON p.id = oi.product_id
+                JOIN orders o ON oi.order_id = o.id
+                LEFT JOIN branchs b ON p.branch_id = b.id
+                LEFT JOIN productcategorys pc ON p.product_category_id = pc.id
+                WHERE o.status_order = 'completed'
+                GROUP BY p.id
+                ORDER BY total_sold DESC
+                LIMIT :limit";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $products = [];
+        $prodIds = [];
+
+        // Map dữ liệu từ SQL sang Model Product
+        foreach ($rows as $row) {
+            $pro = new Product();
+            $pro->fill($row);
+
+            $branch = new Branch();
+            $branch->id = $row['branch_id'];
+            $branch->name = $row['branch_name'];
+            $pro->branch = $branch;
+
+            $proCate = new ProductCategory();
+            $proCate->id = $row['pc_id'];
+            $proCate->name = $row['pc_name'];
+            $pro->productCategory = $proCate;
+
+            $products[] = $pro;
+            $prodIds[] = $pro->id;
+        }
+
+        // Lấy hình ảnh (Logic cũ giữ nguyên)
+        if (!empty($prodIds)) {
+            $idsString = implode(", ", $prodIds);
+            
+            $imgRows = Query::from("productimages pi")
+                ->where(["pi.product_id IN ($idsString)"])
+                ->getAll();
+
+            $productImages = [];
+            foreach ($imgRows as $r) {
+                $img = new ProductImage();
+                $img->fill($r);
+                $productImages[] = $img;
+            }
+
+            foreach ($products as $pro) {
+                $imgs = [];
+                foreach ($productImages as $pI) {
+                    if ($pI->product_id == $pro->id) {
+                        $imgs[] = $pI;
+                    }
+                }
+                $pro->productImages = $imgs;
+            }
+        }
+
+        return $products;
+    }
 }
 

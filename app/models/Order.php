@@ -10,6 +10,8 @@ class Order extends Model
 
  public Address $address;
 
+ public $address_id;
+
  public $total_amount;
 
  public static function tables()
@@ -18,7 +20,7 @@ class Order extends Model
     "id int primary key auto_increment",
     "payment_method varchar(50) not null",
     "status_payment ENUM('unpaid', 'paid') DEFAULT 'unpaid'",
-    "status_order ENUM('confirmed', 'shipping', 'completed') DEFAULT 'confirmed'",
+    "status_order ENUM('unconfirmed','confirmed', 'shipping', 'completed') DEFAULT 'unconfirmed'",
 
     //relationship
     "user_id int",

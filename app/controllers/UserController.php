@@ -63,4 +63,5 @@ class UserController
         
         return ["type" => "success", "text" => "Cập nhật thông tin thành công!"];
     }
+    
 }

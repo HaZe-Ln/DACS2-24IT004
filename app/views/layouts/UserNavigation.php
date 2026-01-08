@@ -35,7 +35,7 @@ $navItems = [
 
         <a href="/app/views/pages/Home.php" class="flex items-center gap-2 text-primary dark:text-white group nav-transition">
           <span class="material-symbols-outlined text-3xl group-hover:text-accent transition-colors">music_note</span>
-          <h2 class="text-xl font-bold leading-tight tracking-[-0.015em] hidden sm:block">HTAMusic</h2>
+          <h2 class="text-xl font-bold leading-tight tracking-[-0.015em] hidden sm:block">AMusic</h2>
         </a>
       </div>
 

@@ -23,21 +23,21 @@ $coreValues = [
 
 $teamMembers = [
   [
-    "name" => "Lê Cao Sơn Tiến",
+    "name" => "Nguyễn Văn A",
     "role" => "Nhà sáng lập & CEO",
-    "bio" => "24IT270",
+    "bio" => "24GT",
     "image" => "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80",
   ],
   [
-    "name" => "Đồng Trần Diệu Hiền",
+    "name" => "Trần Văn B",
     "role" => "Nhà sáng lập & CEO",
-    "bio" => "24IT295",
+    "bio" => "24GT",
     "image" => "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80",
   ],
   [
     "name" => "Hoàng Anh",
     "role" => "Nhà sáng lập & CEO",
-    "bio" => "24IT270",
+    "bio" => "24IT004",
     "image" => "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80",
   ],
 ];
@@ -72,10 +72,10 @@ $teamMembers = [
               
               <div class="flex flex-col gap-3 max-w-2xl transform transition-all duration-500 hover:-translate-y-1">
                 <h1 class="text-white text-4xl sm:text-5xl font-black leading-tight tracking-tight drop-shadow-md">
-                  Về HTAMusic - Nơi Giai Điệu Bắt Đầu
+                  Về AMusic - Nơi Giai Điệu Bắt Đầu
                 </h1>
                 <p class="text-gray-200 text-base sm:text-lg leading-relaxed drop-shadow-sm">
-                  Khám phá câu chuyện, sứ mệnh và đội ngũ đứng sau HTAMusic trên hành trình đem âm nhạc chất lượng đến bạn.
+                  Khám phá câu chuyện, sứ mệnh và đội ngũ đứng sau AMusic trên hành trình đem âm nhạc chất lượng đến bạn.
                 </p>
               </div>
             </div>
@@ -155,7 +155,7 @@ $teamMembers = [
         <div class="group flex flex-col gap-4 items-center justify-center p-8 text-center bg-accent/10 rounded-xl border border-accent/30 shadow-sm transition-all hover:bg-accent/20">
           <h2 class="text-primary text-3xl font-bold tracking-tight">Sẵn sàng bắt đầu hành trình âm nhạc?</h2>
           <p class="text-gray-700 text-base max-w-2xl">
-            Hãy để HTAMusic đồng hành. Khám phá bộ sưu tập nhạc cụ đa dạng và tìm người bạn tri kỷ của bạn.
+            Hãy để AMusic đồng hành. Khám phá bộ sưu tập nhạc cụ đa dạng và tìm người bạn tri kỷ của bạn.
           </p>
           <a href="/app/views/pages/Product.php" class="inline-flex items-center justify-center rounded-lg h-12 px-6 bg-primary text-white text-base font-bold shadow-lg hover:bg-primary/90 hover:shadow-primary/50 hover:scale-105 transition-all duration-300 hover:animate-pulse">
             Khám phá sản phẩm
@@ -166,5 +166,6 @@ $teamMembers = [
   </main>
 
   <?php Import::layout("Footer") ?>
+  <?php Import::component('SocialWidget'); ?>
 </body>
 </html>

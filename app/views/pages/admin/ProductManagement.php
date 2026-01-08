@@ -1,55 +1,29 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/app/helpers/Import.php';
-Import::repositories(["ProductRepository", "ProductCategoryRepository", "BranchRepository"]);
-Import::configs(["db/Query"]); // Import Query để xử lý xóa nhanh nếu cần
+Import::controllers(["AdminProductController"]);
 
-// --- 1. XỬ LÝ POST (Xóa sản phẩm) ---
-if ($_SERVER["REQUEST_METHOD"] === "POST" && ($_POST["action"] ?? "") === "delete") {
-    $deleteId = $_POST["id"] ?? null;
-    if ($deleteId) {
-        // Xóa sản phẩm khỏi DB (Xóa ảnh liên quan nếu cần thiết trong logic mở rộng)
-        Query::from("products")->delete((int)$deleteId);
-    }
-    // Refresh trang để cập nhật danh sách
-    header("Location: /app/views/pages/admin/ProductManagement.php");
-    exit;
-}
+// Gọi Controller
+$controller = new AdminProductController();
+$data = $controller->index();
 
-// --- 2. XỬ LÝ GET (Lọc & Phân trang) ---
-$page = max(1, (int)($_GET["page"] ?? 1));
-$limit = 10; // Số lượng hiển thị mỗi trang
+// Hứng dữ liệu
+$items      = $data['items'];
+$page       = $data['page'];
+$totalPages = $data['totalPages'];
+$total      = $data['total'];
+$filters    = $data['filters']; // Mảng này chứa: search, product_category, branch...
+$categories = $data['categories'];
+$branches   = $data['branches'];
 
-// Lấy tham số lọc
-$search = trim($_GET["q"] ?? "");
-$categoryId = $_GET["category_id"] ?? "";
-$branchId = $_GET["branch_id"] ?? "";
-$priceMin = $_GET["price_min"] ?? "";
-$priceMax = $_GET["price_max"] ?? "";
-$status = $_GET["status"] ?? "all";
-
-// Chuẩn bị bộ lọc cho Repository
-$filters = [
-    'search'           => $search, // Lưu ý: Repository cần hỗ trợ key này nếu muốn tìm theo tên
-    'product_category' => $categoryId,
-    'branch'           => $branchId,
-    'price_min'        => $priceMin,
-    'price_max'        => $priceMax,
-    'status'           => $status
-];
-
-// --- 3. LẤY DỮ LIỆU TỪ REPOSITORY ---
-// Lấy danh sách sản phẩm
-$items = ProductRepository::paginate($page, $limit, $filters);
-
-// Đếm tổng số để tính phân trang
-$total = ProductRepository::count($filters);
-$totalPages = ceil($total / $limit);
-
-// Lấy dữ liệu cho các thẻ Select (Dropdown)
-$categories = ProductCategoryRepository::all(null, 1, 100); // Lấy tối đa 100 danh mục
-$branches = BranchRepository::all(null, 1, 100);       // Lấy tối đa 100 thương hiệu
-
+// [QUAN TRỌNG] Khai báo biến để dùng trong Form HTML bên dưới (Fix lỗi Undefined variable)
+$search     = $filters['search'] ?? '';
+$categoryId = $filters['product_category'] ?? '';
+$branchId   = $filters['branch'] ?? '';
+$priceMin   = $filters['price_min'] ?? '';
+$priceMax   = $filters['price_max'] ?? '';
+$status     = $filters['status'] ?? 'all';
 ?>
+<!DOCTYPE html>
 <!DOCTYPE html>
 <html lang="vi">
 <?php Import::layout('Head', ["title" => "Quản lý sản phẩm"]); ?>

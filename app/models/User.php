@@ -9,6 +9,8 @@ class User extends Model
   public $email;
   public $phone;
   public $role;
+  public $reset_token;
+  public $reset_token_expiry;
 
   public $avatar;
   public static function tables()
@@ -20,6 +22,8 @@ class User extends Model
       "password text not null",
       "phone varchar(11)",
       "role ENUM('admin', 'user') DEFAULT 'user'",
+      "reset_token varchar(255)",
+      "reset_token_expiry TIMESTAMP"
     ];
   }
 }

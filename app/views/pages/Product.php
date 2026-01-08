@@ -13,6 +13,7 @@ $branches   = $data['branches'];   // List object Branch
 $filters    = $data['filters'];    // Các lựa chọn đang active
 $totalPages = $data['totalPages'];
 $currentPage= $data['currentPage'];
+$totalRecords = $data['totalRecords'] ?? 0;
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -132,16 +133,38 @@ Import::layout('Head', [
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div>
                 <h1 class="text-3xl font-bold text-primary">Danh sách sản phẩm</h1>
-                <p class="text-sm text-gray-500 mt-1">Hiển thị <?= count($products) ?> sản phẩm</p>
+                
+                <p class="text-sm text-gray-500 mt-1">
+                    Hiển thị <span class="font-medium text-gray-900"><?= count($products) ?></span> 
+                    trên tổng số <span class="font-medium text-gray-900"><?= number_format($totalRecords, 0, ',', '.') ?></span> sản phẩm
+                </p>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="text-sm font-medium">Sắp xếp theo:</span>
-                <select name="sort" onchange="document.getElementById('filterForm').submit()" form="filterForm" class="form-select rounded-md border-gray-300 bg-background-light focus:border-accent focus:ring-accent text-sm">
-                  <option value="popular">Phổ biến nhất</option>
-                  <option value="price_asc">Giá: Thấp đến cao</option>
-                  <option value="price_desc">Giá: Cao đến thấp</option>
-                </select>
-              </div>
+              <div class="flex items-center gap-3">
+                <span class="text-base font-medium text-gray-700 hidden sm:inline-block">Sắp xếp:</span>
+                
+                <div class="relative">
+                    <select 
+                        name="sort" 
+                        form="filterForm" 
+                        onchange="this.form.submit()" 
+                        class="appearance-none bg-white border border-gray-300 text-gray-700 py-2.5 pl-4 pr-10 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm hover:border-primary transition-all cursor-pointer font-medium min-w-[180px]"
+                    >
+                        <option value="popular" <?= ($filters['sort'] ?? '') == 'popular' ? 'selected' : '' ?>>
+                             Phổ biến nhất
+                        </option>
+                        <option value="price_asc" <?= ($filters['sort'] ?? '') == 'price_asc' ? 'selected' : '' ?>>
+                             Giá: Thấp đến cao
+                        </option>
+                        <option value="price_desc" <?= ($filters['sort'] ?? '') == 'price_desc' ? 'selected' : '' ?>>
+                             Giá: Cao đến thấp
+                        </option>
+                    </select>
+                    
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                        <span class="material-symbols-outlined text-xl">expand_more</span>
+                    </div>
+                </div>
+            </div>
             </div>
 
             <?php if (empty($products)): ?>
@@ -171,32 +194,49 @@ Import::layout('Head', [
                 </ul>
 
               <?php if ($totalPages > 1): ?>
-              <nav class="flex justify-center mt-8">
-                <ul class="flex items-center -space-x-px h-10 text-base">
-                  <li>
-                    <a href="?page=<?= max(1, $currentPage - 1) ?>&branch=<?= $filters['branch'] ?? '' ?>&category=<?= $filters['category'] ?? '' ?>" 
-                       class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 rounded-s-lg hover:bg-gray-100">
-                      <span class="material-symbols-outlined !text-xl">chevron_left</span>
-                    </a>
-                  </li>
-
-                  <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+               <nav class="flex justify-center mt-8">
+                  <ul class="flex items-center -space-x-px h-10 text-base">
+                    
                     <li>
-                        <a href="?page=<?= $i ?>&branch=<?= $filters['branch'] ?? '' ?>&category=<?= $filters['category'] ?? '' ?>" 
-                           class="flex items-center justify-center px-4 h-10 leading-tight border <?= $i == $currentPage ? 'bg-primary text-white border-primary' : 'bg-white  border-gray-300 hover:bg-gray-100' ?>">
-                           <?= $i ?>
-                        </a>
+                      <?php 
+                          // Tạo link cho trang trước, giữ nguyên các tham số khác
+                          $prevParams = array_merge($_GET, ['page' => max(1, $currentPage - 1)]);
+                          $prevLink = '?' . http_build_query($prevParams);
+                      ?>
+                      <a href="<?= $prevLink ?>" 
+                        class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 rounded-s-lg hover:bg-gray-100">
+                        <span class="material-symbols-outlined !text-xl">chevron_left</span>
+                      </a>
                     </li>
-                  <?php endfor; ?>
 
-                  <li>
-                    <a href="?page=<?= min($totalPages, $currentPage + 1) ?>&branch=<?= $filters['branch'] ?? '' ?>&category=<?= $filters['category'] ?? '' ?>" 
-                       class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100">
-                      <span class="material-symbols-outlined !text-xl">chevron_right</span>
-                    </a>
-                  </li>
-                </ul>
-              </nav>
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                      <li>
+                          <?php 
+                              // Tạo link cho trang $i, giữ nguyên các tham số khác (sort, price, branch...)
+                              $pageParams = array_merge($_GET, ['page' => $i]);
+                              $pageLink = '?' . http_build_query($pageParams);
+                          ?>
+                          <a href="<?= $pageLink ?>" 
+                            class="flex items-center justify-center px-4 h-10 leading-tight border <?= $i == $currentPage ? 'bg-primary text-white border-primary' : 'bg-white  border-gray-300 hover:bg-gray-100' ?>">
+                            <?= $i ?>
+                          </a>
+                      </li>
+                    <?php endfor; ?>
+
+                    <li>
+                      <?php 
+                          // Tạo link cho trang sau
+                          $nextParams = array_merge($_GET, ['page' => min($totalPages, $currentPage + 1)]);
+                          $nextLink = '?' . http_build_query($nextParams);
+                      ?>
+                      <a href="<?= $nextLink ?>" 
+                        class="flex items-center justify-center px-4 h-10 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100">
+                        <span class="material-symbols-outlined !text-xl">chevron_right</span>
+                      </a>
+                    </li>
+
+                  </ul>
+                </nav>
               <?php endif; ?>
 
             <?php endif; ?>
@@ -207,6 +247,6 @@ Import::layout('Head', [
   </main>
 
   <?php Import::layout("Footer") ?>
-  
+  <?php Import::component('SocialWidget'); ?>
 </body>
 </html>

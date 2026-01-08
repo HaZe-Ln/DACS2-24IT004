@@ -16,11 +16,14 @@ if (!$post) {
     exit;
 }
 
-// 4. Lấy bài viết liên quan (Truyền ID hiện tại để loại trừ)
+// 4. Lấy bài viết liên quan
 $relatedPosts = $controller->getRelated($post->id);
 
-// Ngày đăng giả lập
-$dateDisplay = "Mới cập nhật"; 
+// --- [CẬP NHẬT] Xử lý hiển thị ngày đăng ---
+// Kiểm tra nếu có created_at thì format, không thì để mặc định
+$dateDisplay = isset($post->created_at) 
+    ? date('d/m/Y - H:i', strtotime($post->created_at)) 
+    : "Không xác định";
 ?>
 
 <!DOCTYPE html>
@@ -34,7 +37,7 @@ $dateDisplay = "Mới cập nhật";
     <div class="layout-content-container flex flex-col max-w-5xl mx-auto flex-1 gap-8">
       
       <nav class="flex flex-wrap gap-2 text-sm text-gray-600">
-        <a class="hover:text-primary" href="/app/views/pages/index.php">Trang chủ</a>
+        <a class="hover:text-primary" href="/app/views/pages/home.php">Trang chủ</a>
         <span>/</span>
         <a class="hover:text-primary" href="/app/views/pages/Posts.php">Bài viết</a>
         <span>/</span>
@@ -47,7 +50,10 @@ $dateDisplay = "Mới cập nhật";
             <div class="flex items-center gap-2 text-sm text-gray-500">
                 <span class="bg-accent/10 text-accent px-2 py-1 rounded font-bold text-xs uppercase">Tin tức</span>
                 <span>•</span>
-                <span><?= $dateDisplay ?></span>
+                <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">schedule</span>
+                    <?= $dateDisplay ?>
+                </span>
             </div>
             
             <h1 class="text-3xl md:text-4xl lg:text-5xl font-black leading-tight text-primary">
@@ -105,11 +111,16 @@ $dateDisplay = "Mới cập nhật";
                         $plainContent = strip_tags($rp->content ?? '');
                         $excerpt = mb_substr($plainContent, 0, 120) . '...';
                         
+                        // [CẬP NHẬT] Format ngày cho bài liên quan
+                        $dateRelated = isset($rp->created_at) 
+                            ? date('d/m/Y', strtotime($rp->created_at)) 
+                            : "N/A";
+
                         Import::component(fileName: "PostCard", variables: [
-                            "id"      => $rp->id, // [ĐÃ SỬA] Truyền ID
+                            "id"      => $rp->id,
                             "title"   => $rp->name,
                             "image"   => $rp->thumb_url,
-                            "date"    => "Mới cập nhật",
+                            "date"    => $dateRelated, // Truyền ngày đã format vào Component
                             "excerpt" => $excerpt
                         ]);
                     ?>
@@ -122,5 +133,6 @@ $dateDisplay = "Mới cập nhật";
   </main>
 
   <?php Import::layout("Footer") ?>
+  <?php Import::component('SocialWidget'); ?>
 </body>
 </html>

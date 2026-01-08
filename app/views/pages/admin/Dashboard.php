@@ -12,8 +12,31 @@ $metrics       = $data['metrics'];
 $revenueSeries = $data['revenueSeries'];
 $orderStatus   = $data['orderStatus'];
 
+// =========================================================================
+// [MỚI] THÊM ĐOẠN NÀY ĐỂ DỊCH "Unconfirmed" -> "Chờ xác nhận"
+// =========================================================================
+$statusMap = [
+    'unconfirmed' => 'Chờ xác nhận',
+    'confirmed'   => 'Đã xác nhận',
+    'shipping'    => 'Đang giao',
+    'completed'   => 'Hoàn tất',
+    'cancelled'   => 'Đã hủy'
+];
+
+if (!empty($orderStatus['labels'])) {
+    foreach ($orderStatus['labels'] as $index => $label) {
+        // Chuyển về chữ thường để so sánh (ví dụ: Unconfirmed -> unconfirmed)
+        $key = strtolower($label);
+        
+        // Nếu tìm thấy trong bảng dịch thì thay thế
+        if (isset($statusMap[$key])) {
+            $orderStatus['labels'][$index] = $statusMap[$key];
+        }
+    }
+}
+// =========================================================================
+
 // 4. Tính tổng số đơn (để tính % cho biểu đồ tròn)
-// Lưu ý: array_sum có thể trả về 0 nếu chưa có đơn hàng, cần handle để tránh lỗi chia cho 0
 $totalOrdersCount = array_sum($orderStatus["data"]); 
 ?>
 <!DOCTYPE html>
@@ -31,18 +54,7 @@ $totalOrdersCount = array_sum($orderStatus["data"]);
           <h1 class="font-semibold">HTAMusic Admin</h1>
         </div>
         <div class="flex flex-1 justify-end items-center gap-3 sm:gap-4">
-          <label class="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
-            <div class="flex w-full items-stretch rounded-lg h-full bg-gray-100 dark:bg-gray-800">
-              <div class="text-gray-500 flex items-center justify-center pl-3 rounded-l-lg">
-                <span class="material-symbols-outlined">search</span>
-              </div>
-              <input class="flex w-full min-w-0 flex-1 rounded-r-lg border-none bg-transparent h-full placeholder:text-gray-500 px-3 text-sm text-gray-900 dark:text-white focus:ring-0" placeholder="Tìm kiếm..." />
-            </div>
-          </label>
-          <button class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
-            <span class="material-symbols-outlined">notifications</span>
-          </button>
-          <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff");'></div>
+            <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff");'></div>
         </div>
       </header>
 
@@ -119,7 +131,7 @@ $totalOrdersCount = array_sum($orderStatus["data"]);
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // Nhận dữ liệu từ PHP
+    // Nhận dữ liệu từ PHP (Đã được dịch ở trên)
     const revenueData = <?= json_encode($revenueSeries) ?>;
     const orderStatusData = <?= json_encode($orderStatus) ?>;
 
@@ -131,6 +143,7 @@ $totalOrdersCount = array_sum($orderStatus["data"]);
         data: {
           labels: revenueData.labels,
           datasets: [{
+            label: 'Doanh thu',
             data: revenueData.data,
             backgroundColor: 'rgba(43, 108, 238, 0.15)',
             borderColor: '#2b6cee',
@@ -164,24 +177,38 @@ $totalOrdersCount = array_sum($orderStatus["data"]);
       });
     }
 
-    // 2. Vẽ biểu đồ Trạng thái
+    // 2. Vẽ biểu đồ Trạng thái (Pie Chart)
     const orderCtx = document.getElementById('orderStatusChart');
     if (orderCtx) {
       new Chart(orderCtx, {
         type: 'doughnut',
         data: {
-          labels: orderStatusData.labels,
+          labels: orderStatusData.labels, // Labels này giờ đã là tiếng Việt
           datasets: [{
             data: orderStatusData.data,
             backgroundColor: orderStatusData.colors,
-            hoverOffset: 4
+            hoverOffset: 4,
+            borderWidth: 0
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          cutout: '70%'
+          plugins: { 
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.label || '';
+                        let value = context.parsed || 0;
+                        let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        let percentage = Math.round((value / total) * 100) + '%';
+                        return label + ': ' + value + ' đơn (' + percentage + ')';
+                    }
+                }
+            }
+          },
+          cutout: '75%'
         }
       });
     }

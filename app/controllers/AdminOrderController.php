@@ -87,6 +87,69 @@ class AdminOrderController
             exit;
         }
     }
+    public function edit()
+    {
+        $orderId = $_GET['id'] ?? 0;
+        if (!$orderId) { header("Location: /app/views/pages/admin/OrderManagement.php"); exit; }
+
+        // Lấy dữ liệu
+        $order = OrderRepository::getOrderById($orderId);
+        $items = OrderRepository::getOrderItems($orderId); // Lấy items chỉ để hiển thị
+
+        if (!$order) { header("Location: /app/views/pages/admin/OrderManagement.php"); exit; }
+
+        // Xử lý POST (Cập nhật)
+        if ($_SERVER["REQUEST_METHOD"] === "POST") {
+            $data = [
+                'phone'        => $_POST['phone'] ?? '',
+                'address'      => $_POST['address'] ?? '',
+                'ward'         => $_POST['ward'] ?? '',
+                'city'         => $_POST['city'] ?? '',
+                'status_order' => $_POST['status_order'] ?? 'confirmed',
+                'status_payment' => $_POST['status_payment'] ?? 'unpaid'
+            ];
+
+            if (OrderRepository::update($orderId, $data)) {
+                // Thành công -> Quay lại trang danh sách hoặc load lại trang edit
+                header("Location: /app/views/pages/admin/OrderManagement.php");
+                exit;
+            } else {
+                echo "<script>alert('Lỗi cập nhật đơn hàng!');</script>";
+            }
+        }
+
+        return [
+            'order' => $order,
+            'items' => $items
+        ];
+    }
+    // [MỚI] API xử lý cập nhật nhanh địa chỉ qua Ajax
+    public function ajaxUpdateAddress()
+    {
+        // Set header JSON để JS nhận diện đúng
+        header('Content-Type: application/json');
+
+        if ($_SERVER["REQUEST_METHOD"] === "POST") {
+            $orderId = $_POST['order_id'] ?? 0;
+            $field   = $_POST['field'] ?? '';
+            $value   = trim($_POST['value'] ?? '');
+
+            if (!$orderId || !$field) {
+                echo json_encode(['success' => false, 'message' => 'Thiếu dữ liệu']);
+                exit;
+            }
+
+            $result = OrderRepository::updateAddressField($orderId, $field, $value);
+
+            if ($result) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Lỗi Database']);
+            }
+            exit;
+        }
+    }
+
 }
 
 // XỬ LÝ ROUTING
@@ -101,5 +164,8 @@ if (isset($_GET['action'])) {
         case 'updateStatus':
             $controller->updateStatus();
             break;
+        case 'ajaxUpdateAddress': 
+            $controller->ajaxUpdateAddress();
+            break;    
     }
 }

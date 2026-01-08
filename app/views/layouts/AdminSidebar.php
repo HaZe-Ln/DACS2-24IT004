@@ -10,6 +10,7 @@ $menuItems = [
   ["slug" => "orders", "icon" => "shopping_bag", "label" => "Đơn hàng", "href" => "/app/views/pages/admin/OrderManagement.php"],
   ["slug" => "users", "icon" => "group", "label" => "Người dùng", "href" => "/app/views/pages/admin/UserManagement.php"],
   ["slug" => "posts", "icon" => "article", "label" => "Bài viết", "href" => "/app/views/pages/admin/PostManagement.php"],
+  ["slug" => "valuations", "icon" => "reviews", "label" => "Đánh giá", "href" => "/app/views/pages/admin/ProductValuationManagement.php"]
 ];
 ?>
 
@@ -19,7 +20,7 @@ $menuItems = [
       <svg class="size-6 text-primary" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
         <path clip-rule="evenodd" d="M24 4H42V17.3333V30.6667H24V44H6V30.6667V17.3333H24V4Z" fill="currentColor" fill-rule="evenodd"></path>
       </svg>
-      <h2 class="text-xl font-bold text-primary">HTAMusic Admin</h2>
+      <h2 class="text-xl font-bold text-primary">AMusic Admin</h2>
     </div>
     <nav class="flex flex-col gap-1">
       <?php foreach ($menuItems as $item):
@@ -32,8 +33,9 @@ $menuItems = [
       <?php endforeach; ?>
     </nav>
   </div>
+  
   <div class="p-4 border-t border-gray-200">
-    <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100" href="#">
+    <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100" href="/app/views/pages/auth/Logout.php">
       <span class="material-symbols-outlined text-2xl">logout</span>
       <span class="text-sm font-medium">Đăng xuất</span>
     </a>

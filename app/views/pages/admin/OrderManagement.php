@@ -16,11 +16,13 @@ $status = $data['status'];
 // Helper hiển thị badge trạng thái
 function getStatusBadge($status) {
     switch ($status) {
-        case 'completed': return ['bg-green-100 text-green-800', 'Hoàn tất'];
-        case 'shipping':  return ['bg-blue-100 text-blue-800', 'Đang giao'];
-        case 'confirmed': return ['bg-yellow-100 text-yellow-800', 'Đã xác nhận'];
-        case 'unpaid':    return ['bg-gray-100 text-gray-800', 'Chưa thanh toán'];
-        default:          return ['bg-gray-100 text-gray-800', $status];
+        case 'completed':   return ['bg-green-100 text-green-800', 'Hoàn tất'];
+        case 'shipping':    return ['bg-blue-100 text-blue-800', 'Đang giao'];
+        case 'confirmed':   return ['bg-yellow-100 text-yellow-800', 'Đã xác nhận'];
+        case 'unpaid':      return ['bg-gray-100 text-gray-800', 'Chưa thanh toán'];
+        case 'unconfirmed': return ['bg-gray-100 text-gray-600', 'Chờ xác nhận'];
+        case 'cancelled':   return ['bg-red-100 text-red-800', 'Đã hủy'];
+        default:            return ['bg-gray-100 text-gray-800', $status];
     }
 }
 ?>
@@ -142,6 +144,14 @@ function getStatusBadge($status) {
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex items-center justify-end gap-2">
+                                            <a href="/app/views/pages/admin/EditOrder.php?id=<?= urlencode($order->id) ?>" 
+                                               class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
+                                               title="Sửa đơn hàng">
+                                                <span class="material-symbols-outlined text-xl">edit_square</span> 
+                                            </a>
+                                            
+                                            <form method="POST" ...>
+                                                </form>
                                             <a href="/app/views/pages/admin/OrderDetail.php?id=<?= urlencode($order->id) ?>" 
                                                class="p-2 text-gray-500 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" 
                                                title="Xem chi tiết">
@@ -162,6 +172,7 @@ function getStatusBadge($status) {
                                                 </button>
                                             </form>
                                         </div>
+                                        
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>

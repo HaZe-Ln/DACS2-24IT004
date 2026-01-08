@@ -69,8 +69,7 @@ $totalPages = max(1, (int)ceil($total / $limit));
                   <th class="px-6 py-3">ID</th>
                   <th class="px-6 py-3">Tên Thương hiệu</th>
                   <th class="px-6 py-3">Địa chỉ</th>
-                  <th class="px-6 py-3 text-center">Mô tả</th>
-                  <th class="px-6 py-3 text-right">Hành động</th>
+                  <th class="px-6 py-3 text-left">Mô tả</th> <th class="px-6 py-3 text-right">Hành động</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-200">
@@ -79,7 +78,13 @@ $totalPages = max(1, (int)ceil($total / $limit));
                     <td class="px-6 py-4 font-mono text-gray-600 whitespace-nowrap"><?= htmlspecialchars($brand->id) ?></td>
                     <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"><?= htmlspecialchars($brand->name) ?></td>
                     <td class="px-6 py-4 text-gray-600 whitespace-nowrap"><?= htmlspecialchars($brand->address ?? '') ?></td>
-                    <td class="px-6 py-4 text-gray-600"><?= htmlspecialchars($brand->description ?? '') ?></td>
+                    
+                    <td class="px-6 py-4 text-gray-600">
+                        <div class="line-clamp-2 max-w-sm" title="<?= htmlspecialchars($brand->description ?? '') ?>">
+                            <?= htmlspecialchars($brand->description ?? '') ?>
+                        </div>
+                    </td>
+
                     <td class="px-6 py-4 text-right">
                       <div class="flex justify-end items-center gap-2">
                         <a href="/app/views/pages/admin/EditBrand.php?id=<?= urlencode($brand->id) ?>" class="p-2 rounded-lg text-yellow-600 hover:bg-yellow-500/10 transition-colors">

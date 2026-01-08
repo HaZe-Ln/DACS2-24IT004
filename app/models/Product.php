@@ -3,7 +3,6 @@ require_once "Model.php";
 require_once "Branch.php";
 require_once "ProductCategory.php";
 require_once "ProductImage.php";
-
 class Product extends Model
 {
   public $id;
@@ -16,10 +15,8 @@ class Product extends Model
   public $quantity;
   public $deleted_at;
 
-  // --- BẮT ĐẦU PHẦN THÊM MỚI ĐỂ SỬA LỖI ---
-  public $branch_id;            // <--- Thêm dòng này
-  public $product_category_id;  // <--- Thêm dòng này
-  // --- KẾT THÚC PHẦN THÊM MỚI ---
+  public $product_category_id;
+  public $branch_id;
 
   public Branch $branch;
   public ProductCategory $productCategory;
@@ -34,8 +31,8 @@ class Product extends Model
       "name varchar(255) not null ",
       "slug varchar(255) not null unique",
       "description longtext",
-      "price_current DECIMAL(10,2) not null",
-      "price_original DECIMAL(10,2) not null",
+      "price_current DECIMAL(15,2) not null",
+      "price_original DECIMAL(15,2) not null",
       "discount_percent int default 0",
       "quantity bigint not null",
       "deleted_at TIMESTAMP",
@@ -48,3 +45,4 @@ class Product extends Model
     ];
   }
 }
+

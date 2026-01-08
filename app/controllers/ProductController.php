@@ -1,5 +1,5 @@
 <?php
-Import::repositories(["ProductRepository"]);
+Import::repositories(["ProductRepository","ProductValuationRepository"]);
 class ProductController
 {
     public function getAllProduct()
@@ -15,6 +15,7 @@ class ProductController
             'product_category' => $_GET['product_category'] ?? [],
             'price_min'        => $_GET['price_min'] ?? 0,
             'price_max'        => $_GET['price_max'] ?? 50000000,
+            'sort'             => $_GET['sort'] ?? 'popular'
         ];
         
         // 2. Lấy danh sách Sản phẩm (Kết quả sau khi lọc)
@@ -34,7 +35,8 @@ class ProductController
             'branches'          => $branches,   // Truyền qua view
             'totalPages'        => $totalPages,
             'currentPage'       => $page,
-            'filters'           => $filters     // Để view biết cái nào đang được tích
+            'filters'           => $filters,     // Để view biết cái nào đang được tích
+            'totalRecords'      => $totalRecords
         ];
     }
     public function getDetail($id)
@@ -59,6 +61,17 @@ class ProductController
             }
         }
         return $results;
+    }
+    // [MỚI] Lấy danh sách đánh giá
+    public function getProductReviews($productId)
+    {
+        // Import Repository nếu chưa có ở đầu file (nhưng file cũ của bạn đã import rồi thì thôi)
+        // Import::repositories(["ProductValuationRepository"]); 
+        
+        if (class_exists('ProductValuationRepository')) {
+            return ProductValuationRepository::getByProductId($productId);
+        }
+        return [];
     }
     public function createProduct($data)
     {

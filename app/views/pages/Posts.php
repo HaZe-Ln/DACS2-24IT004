@@ -42,12 +42,17 @@ $currentPage = $data['currentPage'];
                 $excerpt = mb_substr($plainContent, 0, 150) . '...';
                 $image = !empty($post->thumb_url) ? $post->thumb_url : 'https://via.placeholder.com/600x400?text=No+Image';
                 
+                // [MỚI] Xử lý ngày đăng
+                $dateDisplay = isset($post->created_at) 
+                    ? date('d/m/Y', strtotime($post->created_at)) 
+                    : "Mới cập nhật";
+
                 // Gọi Component PostCard
                 Import::component(fileName: "PostCard", variables: [
-                    "id"      => $post->id,       // [ĐÃ SỬA] Truyền ID thay vì slug
+                    "id"      => $post->id,
                     "title"   => $post->name,
                     "image"   => $image,
-                    "date"    => "Mới cập nhật",
+                    "date"    => $dateDisplay, // [ĐÃ SỬA] Truyền ngày thật vào đây
                     "excerpt" => $excerpt
                 ]);
               ?>
@@ -99,5 +104,6 @@ $currentPage = $data['currentPage'];
   </main>
 
   <?php Import::layout("Footer") ?>
+  <?php Import::component('SocialWidget'); ?>
 </body>
 </html>

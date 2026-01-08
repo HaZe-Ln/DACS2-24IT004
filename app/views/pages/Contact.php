@@ -2,8 +2,8 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/app/helpers/Import.php';
 
 $contactInfo = [
-  ["icon" => "location_on", "title" => "Địa chỉ", "text" => "333 Cao Hồng Lãnh, Hòa Quý, TP. Hồ Chí Minh"],
-  ["icon" => "phone", "title" => "Số điện thoại", "text" => "(+84) 383028421 "],
+  ["icon" => "location_on", "title" => "Địa chỉ", "text" => "Trà Kiểm, Hòa Phước, Hòa Xuân, Đà Nẵng"],
+  ["icon" => "phone", "title" => "Số điện thoại", "text" => "(+84) 702830303 "],
   ["icon" => "email", "title" => "Email hỗ trợ", "text" => "support@htamusic.vn"],
   ["icon" => "schedule", "title" => "Giờ làm việc", "text" => "Thứ 2 - Thứ 7: 8:00 - 21:00 • CN: 9:00 - 18:00"],
 ];
@@ -43,7 +43,7 @@ $contactInfo = [
                 class="w-full h-64 md:h-80"
                 loading="lazy"
                 referrerpolicy="no-referrer-when-downgrade"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3835.5568903191975!2d108.23512110925648!3d15.984500184618877!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31421a77e213d2cb%3A0x9fb1c2b7c5e95c2!2zMzMzIENhbyBI4buTbmcgTMOjbmgsIEhvw6AgUXXDvSwgTmfFqSBIw6BuaCBTxqFuLCDEkMOgIE7hurVuZyA1NTAwMDAsIFZpZXRuYW0!5e0!3m2!1sen!2s!4v1764941419656!5m2!1sen!2s" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3836.260136928246!2d108.212618!3d15.9477859!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31421ac0a6f730e5%3A0xefbec3c2177dd70f!2zVHLDoCBLaeG7g20gMiwgSMOyYSBQaMaw4bubYywgSMOyYSBWYW5nLCDEkMOgIE7hurVuZw!5e0!3m2!1svi!2s!4v1767886064890!5m2!1svi!2s" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
               </iframe>
             </div>
           </div>
@@ -89,5 +89,6 @@ $contactInfo = [
   </main>
 
   <?php Import::layout("Footer") ?>
+  <?php Import::component('SocialWidget'); ?>
 </body>
 </html>

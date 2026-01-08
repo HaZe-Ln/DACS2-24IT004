@@ -32,8 +32,8 @@ class OrderItem extends Model
         "product_slug varchar(255)",
         "product_description longtext",
         "quantity bigint not null",
-        "product_price DECIMAL(10,2) not null",
-        "product_total_price DECIMAL(10,2) not null",
+        "product_price DECIMAL(15,2) not null",
+        "product_total_price DECIMAL(15,2) not null",
             
             
         "order_id int",
